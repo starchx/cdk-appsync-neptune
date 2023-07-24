@@ -1,16 +1,17 @@
-import * as cdk from '@aws-cdk/core';
-import * as appsync from '@aws-cdk/aws-appsync';
-import * as lambda from '@aws-cdk/aws-lambda';
-import * as ec2 from '@aws-cdk/aws-ec2';
-import * as neptune from '@aws-cdk/aws-neptune';
+import { Construct } from "constructs";
+import * as cdk from 'aws-cdk-lib';
+import * as ec2 from 'aws-cdk-lib/aws-ec2';
+import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as appsync from 'aws-cdk-lib/aws-appsync';
+import * as neptune from '@aws-cdk/aws-neptune-alpha';
 
 export class AppsyncNeptuneStack extends cdk.Stack {
-  constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
+  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
     const api = new appsync.GraphqlApi(this, 'Api', {
       name: 'NeptuneAPI',
-      schema: appsync.Schema.fromAsset('graphql/schema.graphql'),
+      schema: appsync.SchemaFile.fromAsset('graphql/schema.graphql'),
       authorizationConfig: {
         defaultAuthorization: {
           authorizationType: appsync.AuthorizationType.API_KEY
@@ -31,11 +32,11 @@ export class AppsyncNeptuneStack extends cdk.Stack {
     // set the new Lambda function as a data source for the AppSync API
     const lambdaDs = api.addLambdaDataSource('lambdaDatasource', lambdaFn);
 
-    lambdaDs.createResolver({
+    lambdaDs.createResolver("LambdaQueryResolver", {
       typeName: "Query",
       fieldName: "listPosts"
     })
-    lambdaDs.createResolver({
+    lambdaDs.createResolver("LambdaMutationResolver", {
       typeName: "Mutation",
       fieldName: "createPost"
     })
